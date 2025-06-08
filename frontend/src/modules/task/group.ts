@@ -5,4 +5,5 @@ export enum TaskGroup {
   SearchSubtitle = "Searching subtitles...",
   ScanDisk = "Scanning disk...",
   Sync = "Syncing...",
+  Remux = "Remuxing...",
 }

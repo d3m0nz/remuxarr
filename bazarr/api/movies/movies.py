@@ -3,6 +3,7 @@
 from flask_restx import Resource, Namespace, reqparse, fields, marshal
 
 from app.database import TableMovies, database, update, select, func
+from utilities.path_mappings import path_mappings
 from radarr.sync.movies import update_one_movie
 from subtitles.indexer.movies import list_missing_subtitles_movies, movies_scan_subtitles
 from app.event_handler import event_stream
@@ -158,8 +159,9 @@ class Movies(Resource):
 
     patch_request_parser = reqparse.RequestParser()
     patch_request_parser.add_argument('radarrid', type=int, required=False, help='Radarr movie ID')
-    patch_request_parser.add_argument('action', type=str, required=False, help='Action to perform from ["scan-disk", '
-                                                                               '"search-missing", "search-wanted", "sync"]')
+    patch_request_parser.add_argument('action', type=str, required=False,
+                                     help='Action to perform from ["scan-disk", '
+                                          '"search-missing", "search-wanted", "sync", "remux"]')
 
     @authenticate
     @api_ns_movies.doc(parser=patch_request_parser)
@@ -188,5 +190,22 @@ class Movies(Resource):
         elif action == "sync":
             update_one_movie(radarrid, 'updated', True)
             return '', 204
+        elif action == "remux":
+            movie = database.execute(
+                select(TableMovies.path)
+                .where(TableMovies.radarrId == radarrid)
+            ).first()
+            if not movie:
+                return 'Movie not found', 404
+
+            movie_path = path_mappings.path_replace_movie(movie.path)
+            try:
+                from utilities.remux import remux
+
+                remux(movie_path)
+            except Exception:
+                return 'Movie file not found. Path mapping issue?', 500
+            else:
+                return '', 204
 
         return 'Unknown action', 400

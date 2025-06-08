@@ -12,6 +12,7 @@ import {
   faSearch,
   faSync,
   faToolbox,
+  faRecycle,
   faUser,
   faWrench,
 } from "@fortawesome/free-solid-svg-icons";
@@ -240,6 +241,19 @@ const MovieDetailView: FunctionComponent = () => {
                   }}
                 >
                   History
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<FontAwesomeIcon icon={faRecycle} />}
+                  onClick={() => {
+                    if (movie) {
+                      task.create(movie.title, TaskGroup.Remux, action, {
+                        action: "remux",
+                        radarrid: id,
+                      });
+                    }
+                  }}
+                >
+                  Remux
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
